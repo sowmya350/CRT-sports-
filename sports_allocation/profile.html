@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>My Sports Profile</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .profile-container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.1);
+        }
+        h2 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+        }
+        .profile-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .profile-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        .detail-group {
+            margin-bottom: 15px;
+        }
+        .detail-label {
+            font-weight: bold;
+            color: #34495e;
+            margin-bottom: 5px;
+        }
+        .detail-value {
+            padding: 10px;
+            background: #f9f9f9;
+            border-radius: 4px;
+            border-left: 4px solid #3498db;
+        }
+        .sport-badge {
+            display: inline-block;
+            padding: 5px 10px;
+            background: #3498db;
+            color: white;
+            border-radius: 20px;
+            font-size: 14px;
+        }
+        .role-badge {
+            display: inline-block;
+            padding: 5px 10px;
+            background: #2ecc71;
+            color: white;
+            border-radius: 20px;
+            font-size: 14px;
+        }
+        .logout-btn {
+            background: #e74c3c;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        .logout-btn:hover {
+            background: #c0392b;
+        }
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #7f8c8d;
+        }
+        .error {
+            color: #e74c3c;
+            text-align: center;
+            padding: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="profile-container">
+        <h2>My Sports Profile</h2>
+        <div id="profile-content">
+            <div class="loading">Loading profile data...</div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const token = localStorage.getItem('access_token');
+            const profileContent = document.getElementById('profile-content');
+            
+            // Check if user is logged in
+            if (!token) {
+                window.location.href = 'login.html';
+                return;
+            }
+            
+            // Load profile data
+            fetch('http://localhost:5000/profile', {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to load profile');
+                }
+                return response.json();
+            })
+            .then(data => {
+                // Display profile data
+                const profileHtml = `
+                    <div class="profile-header">
+                        <h3>Welcome, ${data.username} ${data.role === 'Coach' ? '<span style="color:#e67e22">(Coach)</span>' : ''}</h3>
+                        <button class="logout-btn" id="logoutBtn">Logout</button>
+                    </div>
+                    <div class="profile-details">
+                        <div class="detail-group">
+                            <div class="detail-label">Email</div>
+                            <div class="detail-value">${data.emailid || 'Not provided'}</div>
+                        </div>
+                        
+                        <div class="detail-group">
+                            <div class="detail-label">Phone</div>
+                            <div class="detail-value">${data.phone || 'Not provided'}</div>
+                        </div>
+                        
+                        <div class="detail-group">
+                            <div class="detail-label">Date of Birth</div>
+                            <div class="detail-value">${data.dob || 'Not provided'}</div>
+                        </div>
+                        
+                        <div class="detail-group">
+                            <div class="detail-label">Experience</div>
+                            <div class="detail-value">${data.experience ? data.experience + ' years' : 'Not provided'}</div>
+                        </div>
+                        
+                        <div class="detail-group">
+                            <div class="detail-label">Sport</div>
+                            <div class="detail-value">
+                                <span class="sport-badge">${data.interested_sport || 'Not selected'}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="detail-group">
+                            <div class="detail-label">Role</div>
+                            <div class="detail-value">
+                                <span class="role-badge">${data.role || 'Not selected'}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="detail-group">
+                            <div class="detail-label">Member Since</div>
+                            <div class="detail-value">${new Date(data.registration_date).toLocaleDateString()}</div>
+                        </div>
+                        
+                        <div class="detail-group">
+                            <div class="detail-label">User ID</div>
+                            <div class="detail-value">${data.userid}</div>
+                        </div>
+                    </div>
+                `;
+                
+                profileContent.innerHTML = profileHtml;
+                
+                // Add logout functionality
+                document.getElementById('logoutBtn').addEventListener('click', function() {
+                    localStorage.removeItem('access_token');
+                    localStorage.removeItem('userid');
+                    localStorage.removeItem('username');
+                    localStorage.removeItem('role');
+                    window.location.href = 'login.html';
+                });
+            })
+            .catch(error => {
+                profileContent.innerHTML = `<div class="error">${error.message}. Please <a href="login.html">login</a> again.</div>`;
+            });
+        });
+    </script>
+</body>
+</html>
